@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Search Engine</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #2c2c2c, #3a0032, #5b0000);
+            background-size: 400% 400%;
+            animation: gradientMove 10s ease infinite;
+            color: #fff;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+            border-radius: 8px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ff4d4d;
+        }
+
+        h2 {
+            color: #ff0055;
+        }
+
+        .search-bar {
+            margin: 20px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background-color: #222;
+            color: #fff;
+        }
+
+        .search-bar button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #990033;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .search-bar button:hover {
+            background-color: #cc0033;
+        }
+
+        .results, .suggestions, .user-videos {
+            list-style: none;
+            padding: 0;
+        }
+
+        .result-item, .suggestion-item, .user-video-item {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(255, 0, 85, 0.1);
+            border: 1px solid #990033;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .result-item img, .suggestion-item img, .user-video-item img {
+            width: 100px;
+            height: 60px;
+            object-fit: cover;
+            margin-right: 10px;
+            border-radius: 4px;
+        }
+
+        .result-item h3, .suggestion-item h3, .user-video-item h3 {
+            margin: 0;
+            color: #ff4d4d;
+        }
+
+        .result-item p, .suggestion-item p, .user-video-item p {
+            margin: 5px 0 0;
+            color: #ccc;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        a:hover h3 {
+            text-decoration: underline;
+        }
+
+        .upload-form {
+            margin: 20px 0;
+        }
+
+        .upload-form input[type="text"], .upload-form input[type="url"], .upload-form textarea {
+            padding: 10px;
+            font-size: 16px;
+            width: calc(100% - 22px);
+            margin-bottom: 10px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background-color: #222;
+            color: #fff;
+        }
+
+        .upload-form button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #990033;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .upload-form button:hover {
+            background-color: #cc0033;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Video Search Engine</h1>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search for videos...">
+            <button onclick="searchVideos()">Search</button>
+        </div>
+
+        <h2>Suggestions</h2>
+        <ul id="suggestions" class="suggestions"></ul>
+
+        <h2>Search Results</h2>
+        <ul id="results" class="results"></ul>
+
+        <h2>Your Uploaded Videos</h2>
+        <ul id="userVideos" class="user-videos"></ul>
+
+        <h2>Upload a New Video</h2>
+        <div class="upload-form">
+            <input type="text" id="videoTitle" placeholder="Video Title" required>
+            <input type="url" id="videoUrl" placeholder="Video URL" required>
+            <input type="url" id="videoThumbnail" placeholder="Thumbnail URL" required>
+            <textarea id="videoDescription" placeholder="Video Description" rows="4" required></textarea>
+            <button onclick="uploadVideo()">Upload Video</button>
+        </div>
+    </div>
+
+    <script>
+        const videoDatabase = [
+            
+            { title: "HTML & CSS", description: "learn html css from scratch", url: "https://drive.google.com/file/d/1utecvzel1WbIR05mKd3CbuCSTc7IvAaJ/view?usp=drive_link", thumbnail:"https://676a898cdfa6e90ee258d96d.storage.fermion.app/public-cached/digital-product-thumbnail/fermion-digital-product-id/67bdbd78ac18c478786b5321/thumbnail-unique-id/13j6zfjwwnz5mpddv-r92" },
+            { title: "Bleander part1", description: "learn bleander from scratch", url: "https://drive.google.com/file/d/1LsxOymxKBT2fdLUBydr7sE6iegxv_PMf/view?usp=drive_link", thumbnail: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStV2SGzIo1ZmarpSz8N03ISn_LU1qxCfqnbg&s"},
+            { title: "Bleander part2", description: "bleander from scratch part2", url: "https://drive.google.com/file/d/1CRMvyoh_wGBDqJ8IjhHX3J-kbTu0QUdk/view?usp=drive_link", thumbnail:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStV2SGzIo1ZmarpSz8N03ISn_LU1qxCfqnbg&s"},
+            { title: "Handle keyFrames", description: "The cideo of animation is created using many keyframes ", url: "https://youtu.be/E-sF_1FgpJw?si=U-apxs418myMLJn_", thumbnail: "https://cdn.slidesharecdn.com/ss_thumbnails/presentation222-230821092847-92f6c949-thumbnail.jpg?width=640&height=640&fit=bounds" },
+            { title: "One Piece", description: "Story of a kid wanting to became the king of pirates ", url : "https://drive.google.com/file/d/1wa1Fc6DNG3st9eMWfbQHabwAF_181-ud/view?usp=drive_link", thumbnail: "https://images.justwatch.com/poster/310515848/s718/one-piece.jpg"},
+            { title: "Kiteretsu", description: "Japanese cartoon Hindi Dubbed", url: "https://drive.google.com/file/d/1abrpKQKIjX2vjIfc_RFKjFMM5Zq4M1-B/view?usp=drive_link", thumbnail: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHbtjw5jfV1ojB9cbNHg-GrLRmoGa72EEHTw&s" },
+            { title: "Valley Lanterns", description: "Valley Lanterns: In a hidden valley where light holds ancient magic, a brave young lantern must ignite hope to save her fading world", url:"https://drive.google.com/file/d/11I2SoOO7pdetb4m_gxDiZhcL_2dASbFS/view?usp=drive_link", thumbnail:"https://i.vimeocdn.com/video/664522538-902fad3340def72fa4882e1f12e0c552c42fa8a8bc2cbc75cf0b7a34decda266-d?f=webp"},
+            { title: "Mr. Bean", description: "American Cartoon", url: "https://drive.google.com/file/d/1-kBsF530q2L3fMp9ThSJtUfAouag3TLs/view?usp=drive_link", thumbnail:"https://m.media-amazon.com/images/S/pv-target-images/969779d4bd3cf20deedd87bbfa724ee412b43439d2c994719fa3f2b49da03b82.jpg" }
+    ];
+
+        let userVideos = [];
+
+        function displaySuggestions() {
+            const suggestionsContainer = document.getElementById('suggestions');
+            suggestionsContainer.innerHTML = '';
+
+            videoDatabase.forEach(video => {
+                const suggestionItem = document.createElement('li');
+                suggestionItem.className = 'suggestion-item';
+                suggestionItem.innerHTML = `
+                    <img src="${video.thumbnail}" alt="${video.title} Thumbnail">
+                    <div>
+                        <a href="${video.url}"><h3>${video.title}</h3></a>
+                        <p>${video.description}</p>
+                    </div>
+                `;
+                suggestionsContainer.appendChild(suggestionItem);
+            });
+        }
+
+        function searchVideos() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = '';
+
+            const filteredVideos = videoDatabase.filter(video =>
+                video.title.toLowerCase().includes(query) ||
+                video.description.toLowerCase().includes(query)
+            );
+
+            if (filteredVideos.length > 0) {
+                filteredVideos.forEach(video => {
+                    const resultItem = document.createElement('li');
+                    resultItem.className = 'result-item';
+                    resultItem.innerHTML = `
+                        <img src="${video.thumbnail}" alt="${video.title} Thumbnail">
+                        <div>
+                            <a href="${video.url}"><h3>${video.title}</h3></a>
+                            <p>${video.description}</p>
+                        </div>
+                    `;
+                    resultsContainer.appendChild(resultItem);
+                });
+            } else {
+                resultsContainer.innerHTML = '<p>No results found.</p>';
+            }
+        }
+
+        function uploadVideo() {
+            const title = document.getElementById('videoTitle').value;
+            const url = document.getElementById('videoUrl').value;
+            const thumbnail = document.getElementById('videoThumbnail').value;
+            const description = document.getElementById('videoDescription').value;
+
+            if (title && url && thumbnail && description) {
+                const newVideo = { title, description, url, thumbnail };
+                userVideos.push(newVideo);
+                displayUserVideos();
+                document.getElementById('videoTitle').value = '';
+                document.getElementById('videoUrl').value = '';
+                document.getElementById('videoThumbnail').value = '';
+                document.getElementById('videoDescription').value = '';
+            } else {
+                alert("Please provide all the details (title, URL, thumbnail, description).");
+            }
+        }
+
+        function displayUserVideos() {
+            const userVideosContainer = document.getElementById('userVideos');
+            userVideosContainer.innerHTML = '';
+
+            userVideos.forEach(video => {
+                const userVideoItem = document.createElement('li');
+                userVideoItem.className = 'user-video-item';
+                userVideoItem.innerHTML = `
+                    <img src="${video.thumbnail}" alt="${video.title} Thumbnail">
+                    <div>
+                        <a href="${video.url}"><h3>${video.title}</h3></a>
+                        <p>${video.description}</p>
+                    </div>
+                `;
+                userVideosContainer.appendChild(userVideoItem);
+            });
+        }
+
+        // Display suggestions on page load
+        displaySuggestions();
+    </script>
+</body>
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animation Editor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #2f2f2f;
+      color: #f1f1f1;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      background-color: #444;
+      padding: 10px;
+      border-bottom: 2px solid #888;
+    }
+
+    .toolbar button {
+      padding: 10px;
+      border: 2px solid #888;
+      background-color: #333;
+      color: #f1f1f1;
+      cursor: pointer;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+      transition: background-color 0.3s;
+    }
+
+    .toolbar button:hover {
+      background-color: #666;
+    }
+
+    .canvas-container {
+     position: relative;
+     background-color: #333;
+     border: 2px solid #555;
+     width: 1000px;
+     height: 350px;
+     margin: 20px 0;
+    }
+
+    #animation-canvas {
+      width: 100%;
+      height: 100%;
+      border: 1px solid #555;
+      background-color: #222;
+      display: block;
+    }
+
+    .timeline {
+      display: flex;
+      justify-content: flex-start;
+      width: 800px;
+      background-color: #444;
+      border: 2px solid #555;
+      padding: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .frame {
+      width: 100px;
+      height: 100px;
+      border: 2px solid #666;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background-color: #555;
+      margin: 0 5px;
+      color: #f1f1f1;
+      font-size: 12px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .frame:hover {
+      background-color: #777;
+    }
+
+    .timer-input {
+      margin-top: 5px;
+      width: 60px;
+      text-align: center;
+      background-color: #444;
+      color: #f1f1f1;
+      border: 1px solid #666;
+      border-radius: 5px;
+      font-size: 12px;
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: red;
+      color: white;
+      border: none;
+      padding: 5px;
+      border-radius: 3px;
+      cursor: pointer;
+      display: none;
+    }
+
+    .frame:hover .delete-btn {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button id="draw-tool">Draw</button>
+    <button id="erase">Erase</button>
+    <button id="undo">Undo</button>
+    <button id="redo">Redo</button>
+    <button id="copy">Copy</button>
+    <button id="paste">Paste</button>
+    <button id="add-frame">Add Frame</button>
+    <button id="play">Play</button>
+    <button id="save">Save</button>
+  </div>
+  <div class="canvas-container">
+    <canvas id="animation-canvas"></canvas>
+  </div>
+  <div class="timeline" id="timeline">
+    <!-- Frames will be added dynamically here -->
+  </div>
+
+  <script>
+    const canvas = document.getElementById("animation-canvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = 1000;
+    canvas.height = 350;
+
+    let isDrawing = false;
+    let isErasing = false;
+    let history = [];
+    let redoStack = [];
+    let copiedImageData = null;
+    let frames = [];
+    let frameCount = 0;
+    let isPlaying = false;
+    let currentFrameIndex = 0;
+
+    // Helper function to get mouse position
+    function getMousePos(canvas, evt) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  return {
+    x: (evt.clientX - rect.left) * scaleX,
+    y: (evt.clientY - rect.top) * scaleY
+  };
+}
+    // Draw functionality
+    canvas.addEventListener("mousedown", (e) => {
+      const pos = getMousePos(canvas, e);
+      isDrawing = true;
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    });
+
+    canvas.addEventListener("mousemove", (e) => {
+      if (isDrawing) {
+        const pos = getMousePos(canvas, e);
+        ctx.lineWidth = 5;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "white";
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      } else if (isErasing) {
+        const pos = getMousePos(canvas, e);
+        ctx.clearRect(pos.x - 10, pos.y - 10, 20, 20);
+      }
+    });
+
+    canvas.addEventListener("mouseup", () => {
+      if (isDrawing || isErasing) {
+        history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+        redoStack = [];
+      }
+      isDrawing = false;
+      isErasing = false;
+      ctx.closePath();
+    });
+
+    document.getElementById("erase").addEventListener("click", () => {
+      isErasing = !isErasing;
+      document.getElementById("erase").textContent = isErasing ? "Stop Erase" : "Erase";
+    });
+
+    document.getElementById("undo").addEventListener("click", () => {
+      if (history.length > 0) {
+        redoStack.push(history.pop());
+        redrawCanvas();
+      }
+    });
+
+    document.getElementById("redo").addEventListener("click", () => {
+      if (redoStack.length > 0) {
+        history.push(redoStack.pop());
+        redrawCanvas();
+      }
+    });
+
+    function redrawCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (history.length > 0) {
+        ctx.putImageData(history[history.length - 1], 0, 0);
+      }
+    }
+
+    document.getElementById("copy").addEventListener("click", () => {
+      copiedImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    });
+
+    document.getElementById("paste").addEventListener("click", () => {
+      if (copiedImageData) {
+        ctx.putImageData(copiedImageData, 0, 0);
+      }
+    });
+
+    document.getElementById("add-frame").addEventListener("click", () => {
+      frameCount++;
+      const frameContainer = document.getElementById("timeline");
+
+      const newFrame = document.createElement("div");
+      newFrame.classList.add("frame");
+      newFrame.textContent = `Frame ${frameCount}`;
+
+      const timerInput = document.createElement("input");
+      timerInput.classList.add("timer-input");
+      timerInput.type = "number";
+      timerInput.value = 1;
+      timerInput.min = 0.5;
+      timerInput.step = 0.5;
+      newFrame.appendChild(timerInput);
+
+      const deleteButton = document.createElement("button");
+      deleteButton.classList.add("delete-btn");
+      deleteButton.textContent = "Delete";
+      newFrame.appendChild(deleteButton);
+
+      frameContainer.appendChild(newFrame);
+
+      const canvasData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      frames.push({
+        element: newFrame,
+        timer: timerInput,
+        canvasData
+      });
+
+      deleteButton.addEventListener("click", () => {
+        frameContainer.removeChild(newFrame);
+        frames = frames.filter(f => f.element !== newFrame);
+      });
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    document.getElementById("play").addEventListener("click", () => {
+      isPlaying = !isPlaying;
+      document.getElementById("play").textContent = isPlaying ? "Stop" : "Play";
+      if (isPlaying) playAnimation();
+    });
+    document.getElementById("save").addEventListener("click", () => {
+      const dataURL = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = dataURL;
+      link.download = "animation_frame.png";
+      link.click();
+    });
+
+    function playAnimation() {
+      if (!isPlaying || frames.length === 0) return;
+
+      const currentFrame = frames[currentFrameIndex];
+      ctx.putImageData(currentFrame.canvasData, 0, 0);
+
+      const frameDuration = parseFloat(currentFrame.timer.value) * 1000;
+      currentFrameIndex = (currentFrameIndex + 1) % frames.length;
+
+      setTimeout(playAnimation, frameDuration);
+    }
+  </script>
+</body>
+</html>

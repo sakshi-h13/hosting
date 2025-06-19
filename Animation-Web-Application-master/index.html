@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1c1c1c, #3b003b, #660000);
+            background-size: 300% 300%;
+            animation: backgroundAnimation 10s infinite;
+        }
+
+        @keyframes backgroundAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: linear-gradient(135deg, #2e2e2e, #4b004b);
+            border: 2px solid #820000;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
+            padding: 50px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ffffff;
+            text-shadow: 1px 1px 4px #820000;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #820000;
+            border-radius: 4px;
+            background-color: #1c1c1c;
+            color: #ffffff;
+        }
+
+        .form-group input:focus {
+            border-color: #ff004c;
+            outline: none;
+            box-shadow: 0 0 5px #ff004c;
+        }
+
+        .error {
+            color: #ff004c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #820000, #ff004c);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(255, 0, 76, 0.7);
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #ff004c, #820000);
+            box-shadow: 0 6px 12px rgba(255, 0, 76, 0.9);
+        }
+    </style>
+</head>
+<body>
+     <div class="container">
+        <h2>Sign In</h2>
+        <form id="signInForm" action="SignInServlet" method="post">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                <p class="error" id="emailError">Please enter a valid email.</p>
+            </div>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                <p class="error" id="usernameError">Username must be at least 3 characters long.</p>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                <p class="error" id="passwordError">Password must be at least 6 characters long, contain a number and a special character.</p>
+            </div>
+            <div class="form-group">
+                <label for="dob">Date of Birth</label>
+                <input type="date" id="dob" name="dob" required>
+                <p class="error" id="dobError">Please enter a valid date of birth.</p>
+            </div>
+            <button type="submit" class="btn">Sign In</button>
+            <h3> Already a user?<a href="loginpage.html">LOGIN</a> </h3>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById("signInForm").addEventListener("submit", function(event) {
+            let valid = true;
+
+            // Email validation
+            const email = document.getElementById("email").value;
+            const emailError = document.getElementById("emailError");
+            const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailPattern.test(email)) {
+                emailError.style.display = "block";
+                valid = false;
+            } else {
+                emailError.style.display = "none";
+            }
+
+            // Username validation
+            const username = document.getElementById("username").value;
+            const usernameError = document.getElementById("usernameError");
+            if (username.length < 3) {
+                usernameError.style.display = "block";
+                valid = false;
+            } else {
+                usernameError.style.display = "none";
+            }
+
+            // Password validation
+            const password = document.getElementById("password").value;
+            const passwordError = document.getElementById("passwordError");
+            const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
+            if (!passwordPattern.test(password)) {
+                passwordError.style.display = "block";
+                valid = false;
+            } else {
+                passwordError.style.display = "none";
+            }
+
+            // Date of Birth validation (must be in the past)
+            const dob = document.getElementById("dob").value;
+            const dobError = document.getElementById("dobError");
+            const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+            if (dob >= today) {
+                dobError.style.display = "block";
+                valid = false;
+            } else {
+                dobError.style.display = "none";
+            }
+
+            // Prevent form submission if validation fails
+            if (!valid) {
+                event.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

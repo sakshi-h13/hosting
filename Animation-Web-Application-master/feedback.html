@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback and Suggestion Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a; /* Dark background */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        .animated-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .line {
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to bottom, black, red, purple);
+            animation: move 3s linear infinite;
+        }
+
+        @keyframes move {
+            0% {
+                transform: translateY(-100%);
+            }
+            100% {
+                transform: translateY(100%);
+            }
+        }
+
+        .form-container {
+            background: linear-gradient(135deg, #333, #555); /* Metallic gradient */
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 400px;
+            z-index: 1;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        .form-container h2 {
+            margin-bottom: 20px;
+            color: #e1e1e1;
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: #222;
+            color: #fff;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #8a2be2; /* Purple border when focused */
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group button {
+            background-color: #8a2be2; /* Purple button */
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+
+        .form-group button:hover {
+            background-color: #6a1b9a; /* Darker purple on hover */
+        }
+
+        .form-group button:active {
+            background-color: #4a148c; /* Even darker purple when pressed */
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-background">
+        <!-- Dynamic lines -->
+    </div>
+
+    <div class="form-container">
+        <h2>Feedback & Suggestions</h2>
+        <form id="feedbackForm" action="feedback" method="GET">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" placeholder="Your name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="Your email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="rating">Rate Us</label>
+                <select id="rating" name="rating" required>
+                    <option value="">Select a rating</option>
+                    <option value="excellent">Excellent</option>
+                    <option value="good">Good</option>
+                    <option value="average">Average</option>
+                    <option value="poor">Poor</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="feedback">Your Feedback</label>
+                <textarea id="feedback" name="feedback" placeholder="Share your thoughts or suggestions here" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Add moving lines
+        const animatedBackground = document.querySelector('.animated-background');
+        for (let i = 0; i < 50; i++) {
+            const line = document.createElement('div');
+            line.classList.add('line');
+            line.style.left = `${Math.random() * 100}%`;
+            line.style.animationDuration = `${2 + Math.random() * 3}s`;
+            animatedBackground.appendChild(line);
+        }
+
+        // Handle form submission
+       document.getElementById('feedbackForm').addEventListener('submit', async function (e) {
+    e.preventDefault(); // Prevent default form submission
+
+    const formData = new FormData(this);
+
+    try {
+        const response = await fetch('feedback', { // Ensure this matches your servlet mapping
+            method: 'POST',  // Use POST instead of GET
+            body: formData
+        });
+
+        const text = await response.text();
+        if (response.ok) {
+            alert("Feedback submitted successfully!");
+        } else {
+            alert("Failed to submit feedback.");
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again later.');
+    }
+});
+
+        });
+    </script>
+</body>
+</html>
